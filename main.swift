@@ -1,45 +1,53 @@
 import Foundation
 
-// Struct pour un étudiant
+// Structure pour représenter un étudiant
 struct Etudiant {
     var id: String
+    var nom: String
     var prenom: String
-    var notes: [String: Int] // Matières et leurs notes
+    var niveau: String
+    var notes: [String: Int] = [:]
 }
 
-// Struct pour la gestion des paiements
-struct Paiement {
-    var montantVerse: Int
-    var frais: Int
-}
-
-// Variables globales
+// Dictionnaire pour stocker les étudiants
 var etudiants: [String: Etudiant] = [:]
-var paiements: [String: [Paiement]] = [:]
 
 // Fonction pour ajouter un étudiant
 func ajouterEtudiant() {
     print("Entrez l'ID de l'étudiant:")
     let id = readLine() ?? ""
+
+    guard etudiants[id] == nil else {
+        print("Un étudiant avec cet ID existe déjà.")
+        return
+    }
+
+    print("Entrez le nom de l'étudiant:")
+    let nom = readLine() ?? ""
+
     print("Entrez le prénom de l'étudiant:")
     let prenom = readLine() ?? ""
 
-    // Initialiser les notes à 0 pour chaque matière
-    let notes = ["Maths": 0, "POO": 0, "Genie Logiciel": 0, "Methodologie": 0]
+    print("Entrez le niveau de l'étudiant:")
+    let niveau = readLine() ?? ""
 
-    let etudiant = Etudiant(id: id, prenom: prenom, notes: notes)
+    let etudiant = Etudiant(id: id, nom: nom, prenom: prenom, niveau: niveau)
     etudiants[id] = etudiant
     print("Étudiant ajouté avec succès.")
 }
 
 // Fonction pour lister les étudiants
 func listerEtudiants() {
-    for (id, etudiant) in etudiants {
-        print("ID: \(id), Prénom: \(etudiant.prenom)")
+    if etudiants.isEmpty {
+        print("Aucun étudiant trouvé.")
+    } else {
+        for (id, etudiant) in etudiants {
+            print("ID: \(id), Nom: \(etudiant.nom), Prénom: \(etudiant.prenom), Niveau: \(etudiant.niveau)")
+        }
     }
 }
 
-// Fonction pour ajouter une note
+// Fonction pour ajouter une note à un étudiant
 func ajouterNote() {
     print("Entrez l'ID de l'étudiant:")
     let id = readLine() ?? ""
@@ -49,21 +57,22 @@ func ajouterNote() {
         return
     }
 
-    print("Entrez la matière (Maths, POO, Genie Logiciel, Methodologie):")
+    print("Entrez le nom de la matière:")
     let matiere = readLine() ?? ""
 
-    print("Entrez la note (sur 100):")
-    if let note = Int(readLine() ?? ""), note >= 0 && note <= 100 {
-        etudiant.notes[matiere] = note
-        etudiants[id] = etudiant
-        print("Note ajoutée avec succès.")
-    } else {
-        print("Note invalide. Veuillez entrer une note entre 0 et 100.")
+    print("Entrez la note (sur 100) pour \(matiere):")
+    guard let note = Int(readLine() ?? ""), note >= 0, note <= 100 else {
+        print("Note invalide. La note doit être un entier entre 0 et 100.")
+        return
     }
+
+    etudiant.notes[matiere] = note
+    etudiants[id] = etudiant
+    print("Note ajoutée avec succès.")
 }
 
-// Fonction pour calculer la note moyenne
-func calculerNote() {
+// Fonction pour calculer la moyenne des notes d'un étudiant
+func calculerMoyenne() {
     print("Entrez l'ID de l'étudiant:")
     let id = readLine() ?? ""
 
@@ -72,62 +81,15 @@ func calculerNote() {
         return
     }
 
+    if etudiant.notes.isEmpty {
+        print("Aucune note trouvée pour cet étudiant.")
+        return
+    }
+
     let totalNotes = etudiant.notes.values.reduce(0, +)
     let moyenne = Double(totalNotes) / Double(etudiant.notes.count)
-    print("La moyenne de \(etudiant.prenom) est \(moyenne).")
-}
 
-// Fonction pour faire un paiement
-func faireUnPaiement() {
-    print("Entrez l'ID de l'étudiant:")
-    let id = readLine() ?? ""
-
-    print("Entrez le montant versé:")
-    if let montantVerse = Int(readLine() ?? ""), montantVerse >= 0 {
-        let frais = 5000
-        let paiement = Paiement(montantVerse: montantVerse, frais: frais)
-
-        if paiements[id] != nil {
-            paiements[id]?.append(paiement)
-        } else {
-            paiements[id] = [paiement]
-        }
-
-        print("Paiement enregistré avec succès.")
-    } else {
-        print("Montant invalide.")
-    }
-}
-
-// Fonction pour lister les paiements
-func listerPaiements() {
-    print("Entrez l'ID de l'étudiant:")
-    let id = readLine() ?? ""
-
-    guard let paiementsEtudiant = paiements[id] else {
-        print("Aucun paiement trouvé pour cet étudiant.")
-        return
-    }
-
-    for paiement in paiementsEtudiant {
-        print("Montant versé: \(paiement.montantVerse), Frais: \(paiement.frais)")
-    }
-}
-
-// Fonction pour afficher le solde
-func afficherSolde() {
-    print("Entrez l'ID de l'étudiant:")
-    let id = readLine() ?? ""
-
-    guard let paiementsEtudiant = paiements[id] else {
-        print("Aucun paiement trouvé pour cet étudiant.")
-        return
-    }
-
-    let montantTotal = paiementsEtudiant.map { $0.montantVerse }.reduce(0, +)
-    let fraisTotal = paiementsEtudiant.map { $0.frais }.reduce(0, +)
-    let solde = montantTotal - fraisTotal
-    print("Solde pour l'étudiant \(id): \(solde)")
+    print("La moyenne des notes de \(etudiant.prenom) \(etudiant.nom) est \(moyenne).")
 }
 
 // Fonction pour afficher le menu de gestion des étudiants
@@ -138,7 +100,7 @@ func menuGestionEtudiant() {
         1. Ajouter un étudiant
         2. Lister les étudiants
         3. Ajouter une note
-        4. Calculer la note moyenne
+        4. Calculer la moyenne des notes
         5. Retourner au menu principal
         Choisissez une option :
         """, terminator: "")
@@ -151,7 +113,7 @@ func menuGestionEtudiant() {
         case "3":
             ajouterNote()
         case "4":
-            calculerNote()
+            calculerMoyenne()
         case "5":
             return
         default:
@@ -160,14 +122,60 @@ func menuGestionEtudiant() {
     }
 }
 
-// Fonction pour afficher le menu de gestion des économats
+// Fonction pour gérer les paiements et la gestion économat
 func menuGestionEconomat() {
+    var versements: [String: [Double]] = [:] // Stockage des versements par étudiant
+    let frais: Double = 5000 // Déclaré comme une constante car sa valeur ne change pas
+
+    func faireUnPaiement() {
+        print("Entrez l'ID de l'étudiant:")
+        let id = readLine() ?? ""
+
+        print("Entrez le montant du paiement:")
+        guard let montant = Double(readLine() ?? ""), montant > 0 else {
+            print("Montant invalide.")
+            return
+        }
+
+        // Enregistrer le paiement
+        var versement = versements[id] ?? []
+        versement.append(montant)
+        versements[id] = versement
+        print("Paiement de \(montant) enregistré pour l'étudiant \(id).")
+    }
+
+    func listerVersements() {
+        print("Entrez l'ID de l'étudiant:")
+        let id = readLine() ?? ""
+
+        guard let versement = versements[id] else {
+            print("Aucun versement trouvé pour cet étudiant.")
+            return
+        }
+
+        print("Versements pour l'étudiant \(id):")
+        for (index, montant) in versement.enumerated() {
+            print("Versement \(index + 1): \(montant)")
+        }
+    }
+
+    func soldeEtudiant() {
+        print("Entrez l'ID de l'étudiant:")
+        let id = readLine() ?? ""
+
+        let versementTotal = (versements[id] ?? []).reduce(0, +)
+        let totalARegler = 3000 * 3 + frais // 3 versements de 3000 + frais
+
+        let solde = totalARegler - versementTotal
+        print("Solde restant pour l'étudiant \(id): \(solde)")
+    }
+
     while true {
         print("""
-        Menu Gestion Economat:
+        Menu Gestion Économat:
         1. Faire un paiement
-        2. Lister les paiements
-        3. Afficher le solde
+        2. Lister les versements
+        3. Vérifier le solde d'un étudiant
         4. Retourner au menu principal
         Choisissez une option :
         """, terminator: "")
@@ -176,9 +184,9 @@ func menuGestionEconomat() {
         case "1":
             faireUnPaiement()
         case "2":
-            listerPaiements()
+            listerVersements()
         case "3":
-            afficherSolde()
+            soldeEtudiant()
         case "4":
             return
         default:
@@ -193,7 +201,7 @@ func menuPrincipal() {
         print("""
         Menu Principal:
         1. Gestion des Étudiants
-        2. Gestion Economat
+        2. Gestion Économat
         3. Quitter
         Choisissez une option :
         """, terminator: "")
@@ -204,7 +212,7 @@ func menuPrincipal() {
         case "2":
             menuGestionEconomat()
         case "3":
-            print("Au revoir!")
+            print("Au revoir !")
             return
         default:
             print("Option invalide, veuillez réessayer.")
@@ -212,5 +220,5 @@ func menuPrincipal() {
     }
 }
 
-// Démarrer le menu principal
+// Lancer le menu principal
 menuPrincipal()
